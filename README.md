@@ -15,7 +15,7 @@
  - Function to edit todo
  - Function to delete todo
  - Function to click on the box to complete the task
- - This project use React, TypeScript, CSS and Node Express.js 
+ - This project is using React, TypeScript, CSS and Node Express.js 
 
 
   
