@@ -8,11 +8,13 @@ import TodoBase, { loader as todoLoader } from './routes/TodoBase.tsx'
 import NewTodo, { action as newPostAction } from './routes/NewTodo.tsx'
 import EditTodoForm, { editTodoAction, editTodoLoader } from './routes/EditTodoForm.tsx'
 import DeleteTodo, { deleteAction } from './routes/DeleteTodo.tsx'
+import ErrorPage from './components/ErrorPage.tsx'
 
 const router = createBrowserRouter([
   {
     path: '/',
     element: <RootLayout />,
+    errorElement: <ErrorPage />, 
     children: [
       {
         path: '/',
