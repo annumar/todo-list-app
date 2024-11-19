@@ -1,7 +1,7 @@
 # todo-list-app
 
 ## Step to run project
-  todo-app[backend: 
+  todo-app-backend: 
   - npm install
   - npm start
   
