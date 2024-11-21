@@ -1,4 +1,5 @@
-import { Form, Link, LoaderFunctionArgs, ActionFunctionArgs, useLoaderData, redirect } from "react-router-dom";
+import { Link, LoaderFunctionArgs, useLoaderData, useNavigate, useRevalidator } from "react-router-dom";
+import { useForm } from "react-hook-form"
 import classes from "../routes/NewTodo.module.css";
 import Modal from "../components/Modal";
 
@@ -10,34 +11,76 @@ type Todo = {
 
 function EditTodoForm() {
     const todo = useLoaderData() as Todo
+    const navigate = useNavigate();
+    const { revalidate } = useRevalidator();
+
+    const {
+        register,
+        handleSubmit,
+        formState: { isDirty, errors },
+    } = useForm<Todo>({
+        defaultValues: {
+            title: todo.title,
+            description: todo.description,
+        },
+    });
+
+    const onSubmit = async (data: Todo) => {
+        try {
+            await editTodoAction({
+                formData: data,
+                params: { id: todo.id },
+            });
+            revalidate();
+            navigate("/");
+        } catch (error) {
+            console.error("Failed to update the todo:", error);
+        }
+    };
+
     return (
         <Modal>
-            <Form method="put" className={classes.form}>
+            <form
+                onSubmit={handleSubmit(onSubmit)}
+                className={classes.form}
+            >
                 <p>
                     <label htmlFor="title">Title</label>
                     <input
                         type="text"
                         id="title"
-                        name="title"
-                        defaultValue={todo?.title || ""}
-                        required
+                        {...register("title", { required: "Title is required" })}
                     />
+                    {errors.title && (
+                        <span className={classes.error}>
+                            {errors.title.message}
+                        </span>
+                    )}
                 </p>
                 <p>
                     <label htmlFor="description">Description</label>
                     <textarea
                         id="description"
-                        name="description"
-                        defaultValue={todo?.description || ""}
-                        required
                         rows={3}
+                        {...register("description", {
+                            required: "Description is required",
+                        })}
                     />
+                    {errors.description && (
+                        <span className={classes.error}>
+                            {errors.description.message}
+                        </span>
+                    )}
                 </p>
                 <p className={classes.actions}>
-                    <Link to=".." type='button'>Cancel</Link>
-                    <button type="submit">Save</button>
+                    <Link to="..">
+                        Cancel
+                    </Link>
+                    <button type="submit" disabled={!isDirty}>
+                        Save
+                    </button>
                 </p>
-            </Form>
+            </form>
         </Modal>
     );
 }
@@ -56,13 +99,21 @@ export async function editTodoLoader({ params }: LoaderFunctionArgs) {
     return data.todo;
 }
 
-export async function editTodoAction({ request, params }: ActionFunctionArgs) {
-    const formData = await request.formData();
-    const updatedTodo = Object.fromEntries(formData);
+export async function editTodoAction({
+    params,
+    formData,
+}: {
+    params?: { id?: string };
+    formData?: FormData | Record<string, string>;
+}) {
+    const updatedTodo =
+        formData instanceof FormData
+            ? Object.fromEntries(formData)
+            : formData;
 
-    const { id } = params
+    const todoId = params?.id || (updatedTodo as { id?: string })?.id;
 
-    await fetch(`http://localhost:8080/todos/${id}`, {
+    const response = await fetch(`http://localhost:8080/todos/${todoId}`, {
         method: "PUT",
         body: JSON.stringify(updatedTodo),
         headers: {
@@ -70,6 +121,12 @@ export async function editTodoAction({ request, params }: ActionFunctionArgs) {
         },
     });
 
-    return redirect("/");
+    if (!response.ok) {
+        throw new Error("Failed to update the todo.");
+    }
+
+    const updatedData = await response.json();
+    return updatedData;
 }
+
 

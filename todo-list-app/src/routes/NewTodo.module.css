@@ -39,10 +39,17 @@
     border-radius: 4px;
     background-color: #212024;
     color: #f4f0ec;
+    transition: background-color 0.3s, color 0.3s;
   }
   
-  .actions button:hover {
+  .actions button:hover:not(:disabled) {
     background-color: #d1bee6;
+  }
+
+  .actions button:disabled {
+    background-color: #cccccc; 
+    color: #666666;
+    cursor: not-allowed; 
   }
   
   .actions a {
@@ -54,3 +61,9 @@
   .actions a:hover {
     color: #d1bee6;
   }
+
+  .error {
+    color: red;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
